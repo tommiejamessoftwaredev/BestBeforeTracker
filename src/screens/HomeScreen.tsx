@@ -40,6 +40,57 @@ const HomeScreen = () => {
 
 
 
+  const handleOpenProduct = (item: FoodItem) => {
+    if (item.openedDate) {
+      Alert.alert('Already Opened', `This product was opened on ${item.openedDate.toLocaleDateString()}`);
+      return;
+    }
+
+    Alert.prompt(
+      'Product Opened',
+      'Use within how many days after opening?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Set',
+          onPress: (useWithinDaysText?: string) => {
+            const useWithinDays = parseInt(useWithinDaysText || '0');
+            if (useWithinDays > 0) {
+              const openedDate = new Date();
+              const newExpiryDate = new Date(openedDate.getTime() + useWithinDays * 24 * 60 * 60 * 1000);
+              
+              // Use the earlier of original expiry or new "use within" date
+              const finalExpiryDate = newExpiryDate < item.expiryDate ? newExpiryDate : item.expiryDate;
+              
+              // Calculate days until expiry properly
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const finalExpiry = new Date(finalExpiryDate);
+              finalExpiry.setHours(0, 0, 0, 0);
+              const diffTime = finalExpiry.getTime() - today.getTime();
+              const newDaysUntilExpiry = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+              const updatedItem: FoodItem = {
+                ...item,
+                originalExpiryDate: item.originalExpiryDate || item.expiryDate,
+                expiryDate: finalExpiryDate,
+                openedDate,
+                useWithinDays,
+                daysUntilExpiry: newDaysUntilExpiry
+              };
+
+              setFoodItems(foodItems.map(foodItem => 
+                foodItem.id === item.id ? updatedItem : foodItem
+              ));
+            }
+          }
+        }
+      ],
+      'plain-text',
+      '7' // Default value
+    );
+  };
+
   const removeItem = (id: string) => {
     setFoodItems(foodItems.filter(item => item.id !== id));
   };
@@ -67,12 +118,22 @@ const HomeScreen = () => {
               ? `${item.name} expires tomorrow`
               : `${item.name} expires in ${item.daysUntilExpiry} days`;
         
-        Alert.alert('Food Item', message);
+        const details = item.openedDate 
+          ? `\n\nOpened on ${item.openedDate.toLocaleDateString()}${item.useWithinDays ? ` (use within ${item.useWithinDays} days)` : ''}`
+          : '';
+        
+        Alert.alert('Food Item', message + details);
       }}
     >
       <View style={styles.itemInfo}>
         <Text style={styles.itemName}>{item.name}</Text>
         <Text style={styles.itemCategory}>{item.category} • {item.location}</Text>
+        {item.openedDate && (
+          <Text style={styles.openedText}>
+            Opened on {item.openedDate.toLocaleDateString()}
+            {item.useWithinDays && ` • Use within ${item.useWithinDays} days`}
+          </Text>
+        )}
         <Text style={[styles.itemExpiry, { color: getExpiryColor(item.daysUntilExpiry) }]}>
           {item.daysUntilExpiry < 0 ? 'Expired' :
            item.daysUntilExpiry === 0 ? 'Expires today!' : 
@@ -80,12 +141,22 @@ const HomeScreen = () => {
            `Expires in ${item.daysUntilExpiry} days`}
         </Text>
       </View>
-      <TouchableOpacity
-        style={styles.removeButton}
-        onPress={() => removeItem(item.id)}
-      >
-        <Text style={styles.removeButtonText}>Used</Text>
-      </TouchableOpacity>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.openedButton]}
+          onPress={() => handleOpenProduct(item)}
+        >
+          <Text style={styles.actionButtonText}>
+            {item.openedDate ? '✓' : 'Open'}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.usedButton]}
+          onPress={() => removeItem(item.id)}
+        >
+          <Text style={styles.actionButtonText}>Used</Text>
+        </TouchableOpacity>
+      </View>
     </TouchableOpacity>
   );
 
@@ -216,6 +287,34 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: '#fff',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  openedText: {
+    fontSize: 12,
+    color: '#666',
+    fontStyle: 'italic',
+    marginBottom: 4,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  actionButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    minWidth: 50,
+    alignItems: 'center',
+  },
+  openedButton: {
+    backgroundColor: '#ff8800',
+  },
+  usedButton: {
+    backgroundColor: '#44aa44',
+  },
+  actionButtonText: {
+    color: '#fff',
+    fontSize: 12,
     fontWeight: '600',
   },
 });
