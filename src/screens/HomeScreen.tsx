@@ -6,13 +6,10 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
-  Modal,
 } from 'react-native';
 import { FoodItem } from '../types';
-import ScanScreen from './ScanScreen';
 
 const HomeScreen = () => {
-  const [showScanScreen, setShowScanScreen] = useState(false);
   const [foodItems, setFoodItems] = useState<FoodItem[]>([
     {
       id: '1',
@@ -33,10 +30,6 @@ const HomeScreen = () => {
       daysUntilExpiry: 5,
     },
   ]);
-
-  const addFoodItem = (newItem: FoodItem) => {
-    setFoodItems([...foodItems, newItem]);
-  };
 
   const addSampleItem = () => {
     const newItem: FoodItem = {
@@ -101,24 +94,9 @@ const HomeScreen = () => {
         style={styles.list}
       />
 
-      <TouchableOpacity style={styles.scanButton} onPress={() => setShowScanScreen(true)}>
-        <Text style={styles.scanButtonText}>📱 Scan New Item</Text>
-      </TouchableOpacity>
-
       <TouchableOpacity style={styles.addButton} onPress={addSampleItem}>
         <Text style={styles.addButtonText}>+ Add Sample Item</Text>
       </TouchableOpacity>
-
-      <Modal
-        visible={showScanScreen}
-        animationType="slide"
-        presentationStyle="fullScreen"
-      >
-        <ScanScreen
-          onItemAdded={addFoodItem}
-          onClose={() => setShowScanScreen(false)}
-        />
-      </Modal>
     </View>
   );
 };
@@ -199,19 +177,6 @@ const styles = StyleSheet.create({
   removeButtonText: {
     color: '#fff',
     fontSize: 12,
-    fontWeight: '600',
-  },
-  scanButton: {
-    backgroundColor: '#FF6B35',
-    margin: 20,
-    marginBottom: 10,
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  scanButtonText: {
-    color: '#fff',
-    fontSize: 16,
     fontWeight: '600',
   },
   addButton: {
