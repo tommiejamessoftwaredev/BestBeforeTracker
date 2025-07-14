@@ -7,8 +7,8 @@ import {
   TouchableOpacity,
   Alert,
   ScrollView,
+  Modal,
 } from 'react-native';
-import BarcodeScanner from '../components/BarcodeScanner';
 import { FoodItem } from '../types';
 
 interface ScanScreenProps {
@@ -17,26 +17,12 @@ interface ScanScreenProps {
 }
 
 const ScanScreen: React.FC<ScanScreenProps> = ({ onItemAdded, onClose }) => {
-  const [showScanner, setShowScanner] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
   const [barcode, setBarcode] = useState('');
   const [name, setName] = useState('');
   const [category, setCategory] = useState('');
   const [location, setLocation] = useState<'fridge' | 'pantry' | 'freezer'>('fridge');
   const [expiryDate, setExpiryDate] = useState('');
-
-  const handleBarcodeScanned = (scannedBarcode: string) => {
-    setBarcode(scannedBarcode);
-    setShowScanner(false);
-    
-    // Try to look up product info (for now just show the barcode)
-    Alert.alert('Barcode Scanned', `Found: ${scannedBarcode}`, [
-      { text: 'OK', onPress: () => {} }
-    ]);
-    
-    // TODO: Look up product info from barcode API
-    setName('Scanned Product'); // Placeholder
-    setCategory('Unknown'); // Placeholder
-  };
 
   const calculateDaysUntilExpiry = (expiryDateString: string): number => {
     if (!expiryDateString) return 0;
@@ -70,14 +56,21 @@ const ScanScreen: React.FC<ScanScreenProps> = ({ onItemAdded, onClose }) => {
     onClose();
   };
 
-  if (showScanner) {
-    return (
-      <BarcodeScanner
-        onBarcodeScanned={handleBarcodeScanned}
-        onClose={() => setShowScanner(false)}
-      />
-    );
-  }
+  const simulateBarcodeScan = () => {
+    // Simulate scanning a barcode
+    const mockBarcode = Math.random().toString().substr(2, 12);
+    setBarcode(mockBarcode);
+    setName('Scanned Product');
+    setCategory('Food');
+    Alert.alert('Barcode Scanned!', `Mock barcode: ${mockBarcode}`);
+  };
+
+  const handleRealScan = () => {
+    // For now, still use simulation since camera setup can be complex
+    // TODO: Add real camera scanning
+    simulateBarcodeScan();
+    Alert.alert('Camera Coming Soon!', 'Real camera scanning will be added next. For now, using simulation.');
+  };
 
   return (
     <View style={styles.container}>
@@ -97,16 +90,17 @@ const ScanScreen: React.FC<ScanScreenProps> = ({ onItemAdded, onClose }) => {
               style={[styles.input, { flex: 1 }]}
               value={barcode}
               onChangeText={setBarcode}
-              placeholder="Scan or enter manually"
+              placeholder="Enter barcode manually"
               placeholderTextColor="#999"
             />
             <TouchableOpacity
               style={styles.scanButton}
-              onPress={() => setShowScanner(true)}
+              onPress={handleRealScan}
             >
-              <Text style={styles.scanButtonText}>Scan</Text>
+              <Text style={styles.scanButtonText}>Scan Barcode</Text>
             </TouchableOpacity>
           </View>
+          <Text style={styles.hint}>Camera functionality coming soon!</Text>
         </View>
 
         {/* Product Info */}
@@ -231,7 +225,7 @@ const styles = StyleSheet.create({
   },
   scanButton: {
     backgroundColor: '#007AFF',
-    paddingHorizontal: 20,
+    paddingHorizontal: 15,
     paddingVertical: 12,
     borderRadius: 8,
     justifyContent: 'center',
@@ -239,6 +233,7 @@ const styles = StyleSheet.create({
   scanButtonText: {
     color: '#fff',
     fontWeight: '600',
+    fontSize: 12,
   },
   locationRow: {
     flexDirection: 'row',

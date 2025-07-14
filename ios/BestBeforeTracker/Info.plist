@@ -50,6 +50,6 @@
 		<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false />
 		<key>NSCameraUsageDescription</key>
-		<string>This app needs camera access to scan barcodes and read expiry dates</string>
+		<string>$(PRODUCT_NAME) needs access to your Camera.</string>
 	</dict>
 </plist>
