@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState } from 'react';
 import {
   View,
@@ -29,10 +30,13 @@ const ScanScreen: React.FC<ScanScreenProps> = ({ onItemAdded, onClose }) => {
     
     const expiry = new Date(expiryDateString);
     const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day
+    expiry.setHours(0, 0, 0, 0); // Reset time to start of day
+    
     const diffTime = expiry.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
-    return Math.max(0, diffDays);
+    return diffDays; // Allow negative values for expired items
   };
 
   const handleSave = () => {
@@ -65,6 +69,15 @@ const ScanScreen: React.FC<ScanScreenProps> = ({ onItemAdded, onClose }) => {
     Alert.alert('Barcode Scanned!', `Mock barcode: ${mockBarcode}`);
   };
 
+  const handleProductScan = () => {
+    // This will be the full product + expiry date scan
+    Alert.alert(
+      'Scan Product Coming Soon!', 
+      'This will:\n• Scan the barcode\n• Look up product info\n• Use OCR to read expiry date\n• Fill in all fields automatically',
+      [{ text: 'OK' }]
+    );
+  };
+
   const handleRealScan = () => {
     // For now, still use simulation since camera setup can be complex
     // TODO: Add real camera scanning
@@ -82,6 +95,18 @@ const ScanScreen: React.FC<ScanScreenProps> = ({ onItemAdded, onClose }) => {
       </View>
 
       <ScrollView style={styles.form}>
+        {/* Quick Scan Section */}
+        <View style={styles.section}>
+          <TouchableOpacity style={styles.quickScanButton} onPress={handleProductScan}>
+            <Text style={styles.quickScanText}>📸 Scan Product</Text>
+            <Text style={styles.quickScanSubtext}>Auto-fill from camera</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.divider}>
+          <Text style={styles.dividerText}>OR ENTER MANUALLY</Text>
+        </View>
+
         {/* Barcode Section */}
         <View style={styles.section}>
           <Text style={styles.label}>Barcode (Optional)</Text>
@@ -100,7 +125,7 @@ const ScanScreen: React.FC<ScanScreenProps> = ({ onItemAdded, onClose }) => {
               <Text style={styles.scanButtonText}>Scan Barcode</Text>
             </TouchableOpacity>
           </View>
-          <Text style={styles.hint}>Camera functionality coming soon!</Text>
+          <Text style={styles.hint}>For barcode only (no product lookup yet)</Text>
         </View>
 
         {/* Product Info */}
@@ -200,6 +225,34 @@ const styles = StyleSheet.create({
   form: {
     flex: 1,
     padding: 20,
+  },
+  quickScanButton: {
+    backgroundColor: '#FF6B35',
+    padding: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  quickScanText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  quickScanSubtext: {
+    color: '#fff',
+    fontSize: 14,
+    opacity: 0.9,
+  },
+  divider: {
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  dividerText: {
+    color: '#999',
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 1,
   },
   section: {
     marginBottom: 20,

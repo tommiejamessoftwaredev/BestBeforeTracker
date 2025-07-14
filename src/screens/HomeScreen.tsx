@@ -6,10 +6,13 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  Modal,
 } from 'react-native';
 import { FoodItem } from '../types';
+import ScanScreen from './ScanScreen';
 
 const HomeScreen = () => {
+  const [showScanScreen, setShowScanScreen] = useState(false);
   const [foodItems, setFoodItems] = useState<FoodItem[]>([
     {
       id: '1',
@@ -31,24 +34,18 @@ const HomeScreen = () => {
     },
   ]);
 
-  const addSampleItem = () => {
-    const newItem: FoodItem = {
-      id: Date.now().toString(),
-      name: 'Sample Item',
-      expiryDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-      category: 'Test',
-      addedDate: new Date(),
-      location: 'fridge',
-      daysUntilExpiry: 3,
-    };
+  const addFoodItem = (newItem: FoodItem) => {
     setFoodItems([...foodItems, newItem]);
   };
+
+
 
   const removeItem = (id: string) => {
     setFoodItems(foodItems.filter(item => item.id !== id));
   };
 
   const getExpiryColor = (daysUntilExpiry: number) => {
+    if (daysUntilExpiry < 0) return '#cc0000'; // Dark red for expired
     if (daysUntilExpiry <= 1) return '#ff4444'; // Red
     if (daysUntilExpiry <= 3) return '#ff8800'; // Orange
     return '#44aa44'; // Green
@@ -56,14 +53,29 @@ const HomeScreen = () => {
 
   const renderFoodItem = ({ item }: { item: FoodItem }) => (
     <TouchableOpacity
-      style={[styles.foodItem, { borderLeftColor: getExpiryColor(item.daysUntilExpiry) }]}
-      onPress={() => Alert.alert('Food Item', `${item.name} expires in ${item.daysUntilExpiry} days`)}
+      style={[
+        styles.foodItem, 
+        { borderLeftColor: getExpiryColor(item.daysUntilExpiry) },
+        item.daysUntilExpiry < 0 && styles.expiredItem // Add red background for expired items
+      ]}
+      onPress={() => {
+        const message = item.daysUntilExpiry < 0 
+          ? `${item.name} has expired`
+          : item.daysUntilExpiry === 0 
+            ? `${item.name} expires today!`
+            : item.daysUntilExpiry === 1
+              ? `${item.name} expires tomorrow`
+              : `${item.name} expires in ${item.daysUntilExpiry} days`;
+        
+        Alert.alert('Food Item', message);
+      }}
     >
       <View style={styles.itemInfo}>
         <Text style={styles.itemName}>{item.name}</Text>
         <Text style={styles.itemCategory}>{item.category} • {item.location}</Text>
         <Text style={[styles.itemExpiry, { color: getExpiryColor(item.daysUntilExpiry) }]}>
-          {item.daysUntilExpiry === 0 ? 'Expires today!' : 
+          {item.daysUntilExpiry < 0 ? 'Expired' :
+           item.daysUntilExpiry === 0 ? 'Expires today!' : 
            item.daysUntilExpiry === 1 ? 'Expires tomorrow' : 
            `Expires in ${item.daysUntilExpiry} days`}
         </Text>
@@ -83,7 +95,8 @@ const HomeScreen = () => {
       
       <View style={styles.summary}>
         <Text style={styles.summaryText}>
-          {foodItems.filter(item => item.daysUntilExpiry <= 1).length} items expiring soon
+          {foodItems.filter(item => item.daysUntilExpiry <= 1).length} items expiring soon • {' '}
+          {foodItems.filter(item => item.daysUntilExpiry < 0).length} expired
         </Text>
       </View>
 
@@ -94,9 +107,20 @@ const HomeScreen = () => {
         style={styles.list}
       />
 
-      <TouchableOpacity style={styles.addButton} onPress={addSampleItem}>
-        <Text style={styles.addButtonText}>+ Add Sample Item</Text>
+      <TouchableOpacity style={styles.addButton} onPress={() => setShowScanScreen(true)}>
+        <Text style={styles.addButtonText}>+ Add Food Item</Text>
       </TouchableOpacity>
+
+      <Modal
+        visible={showScanScreen}
+        animationType="slide"
+        presentationStyle="fullScreen"
+      >
+        <ScanScreen
+          onItemAdded={addFoodItem}
+          onClose={() => setShowScanScreen(false)}
+        />
+      </Modal>
     </View>
   );
 };
@@ -149,6 +173,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
+  },
+  expiredItem: {
+    backgroundColor: '#ffe6e6', // Light red background for expired items
   },
   itemInfo: {
     flex: 1,
