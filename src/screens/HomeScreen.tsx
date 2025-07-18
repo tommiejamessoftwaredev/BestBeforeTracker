@@ -54,7 +54,7 @@ const HomeScreen = () => {
         {
           text: 'Set',
           onPress: (useWithinDaysText?: string) => {
-            const useWithinDays = parseInt(useWithinDaysText || '0');
+            const useWithinDays = parseInt(useWithinDaysText || '0', 10);
             if (useWithinDays > 0) {
               const openedDate = new Date();
               const newExpiryDate = new Date(openedDate.getTime() + useWithinDays * 24 * 60 * 60 * 1000);
@@ -96,9 +96,15 @@ const HomeScreen = () => {
   };
 
   const getExpiryColor = (daysUntilExpiry: number) => {
-    if (daysUntilExpiry < 0) return '#cc0000'; // Dark red for expired
-    if (daysUntilExpiry <= 1) return '#ff4444'; // Red
-    if (daysUntilExpiry <= 3) return '#ff8800'; // Orange
+    if (daysUntilExpiry < 0) {
+      return '#cc0000';
+    } // Dark red for expired
+    if (daysUntilExpiry <= 1) {
+      return '#ff4444';
+    } // Red
+    if (daysUntilExpiry <= 3) {
+      return '#ff8800';
+    } // Orange
     return '#44aa44'; // Green
   };
 

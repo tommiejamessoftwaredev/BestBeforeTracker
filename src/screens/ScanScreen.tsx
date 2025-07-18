@@ -10,6 +10,7 @@ import {
   ScrollView,
   Modal,
 } from 'react-native';
+import DatePicker from 'react-native-date-picker';
 import { FoodItem } from '../types';
 
 interface ScanScreenProps {
@@ -23,14 +24,13 @@ const ScanScreen: React.FC<ScanScreenProps> = ({ onItemAdded, onClose }) => {
   const [name, setName] = useState('');
   const [category, setCategory] = useState('');
   const [location, setLocation] = useState<'fridge' | 'pantry' | 'freezer'>('fridge');
-  const [expiryDate, setExpiryDate] = useState('');
+  const [expiryDate, setExpiryDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const calculateDaysUntilExpiry = (expiryDateString: string): number => {
-    if (!expiryDateString) return 0;
-    
-    const expiry = new Date(expiryDateString);
+  const calculateDaysUntilExpiry = (targetDate: Date): number => {
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Reset time to start of day
+    const expiry = new Date(targetDate);
     expiry.setHours(0, 0, 0, 0); // Reset time to start of day
     
     const diffTime = expiry.getTime() - today.getTime();
@@ -40,8 +40,8 @@ const ScanScreen: React.FC<ScanScreenProps> = ({ onItemAdded, onClose }) => {
   };
 
   const handleSave = () => {
-    if (!name || !expiryDate) {
-      Alert.alert('Error', 'Please fill in product name and expiry date');
+    if (!name) {
+      Alert.alert('Error', 'Please fill in product name');
       return;
     }
 
@@ -49,7 +49,7 @@ const ScanScreen: React.FC<ScanScreenProps> = ({ onItemAdded, onClose }) => {
       id: Date.now().toString(),
       name,
       barcode: barcode || undefined,
-      expiryDate: new Date(expiryDate),
+      expiryDate,
       category: category || 'Other',
       addedDate: new Date(),
       location,
@@ -180,20 +180,35 @@ const ScanScreen: React.FC<ScanScreenProps> = ({ onItemAdded, onClose }) => {
         {/* Expiry Date */}
         <View style={styles.section}>
           <Text style={styles.label}>Expiry Date *</Text>
-          <TextInput
-            style={styles.input}
-            value={expiryDate}
-            onChangeText={setExpiryDate}
-            placeholder="YYYY-MM-DD"
-            placeholderTextColor="#999"
-          />
-          <Text style={styles.hint}>Format: YYYY-MM-DD (e.g., 2024-07-20)</Text>
+          <TouchableOpacity
+            style={styles.datePickerButton}
+            onPress={() => setShowDatePicker(true)}
+          >
+            <Text style={styles.datePickerText}>
+              {expiryDate.toLocaleDateString()}
+            </Text>
+          </TouchableOpacity>
+          <Text style={styles.hint}>Tap to select expiry date</Text>
         </View>
 
         <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
           <Text style={styles.saveButtonText}>Add Item</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <DatePicker
+        modal
+        open={showDatePicker}
+        date={expiryDate}
+        mode="date"
+        onConfirm={(date) => {
+          setShowDatePicker(false);
+          setExpiryDate(date);
+        }}
+        onCancel={() => {
+          setShowDatePicker(false);
+        }}
+      />
     </View>
   );
 };
@@ -316,6 +331,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     marginTop: 4,
+  },
+  datePickerButton: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    justifyContent: 'center',
+  },
+  datePickerText: {
+    fontSize: 16,
+    color: '#333',
   },
   saveButton: {
     backgroundColor: '#44aa44',
